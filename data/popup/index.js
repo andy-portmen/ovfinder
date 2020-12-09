@@ -1,24 +1,24 @@
 /* globals $ */
 'use strict';
 
-var elements = {
+const elements = {
   loader: document.querySelector('#loader'),
   progress: document.querySelector('#loader span'),
   thead: document.querySelector('#table thead tr'),
   tbody: document.querySelector('#table tbody')
 };
 
-function humanFileSize (size) {
+function humanFileSize(size) {
   size = parseInt(size);
   if (!size) {
     return size;
   }
-  let i = Math.floor(Math.log(size) / Math.log(1024));
+  const i = Math.floor(Math.log(size) / Math.log(1024));
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
-var table = $('#table').DataTable({
-  'pageLength': 5,
+const table = $('#table').DataTable({
+  'pageLength': 7,
   'lengthChange': false,
   'columns': [
     {orderable: false},
@@ -29,21 +29,58 @@ var table = $('#table').DataTable({
     null,
     {orderable: false}
   ],
-  'order': [[3, 'desc']],
+  'order': [[3, 'desc']]
 });
 
-var req = new XMLHttpRequest();
+fetch('http://www.vpngate.net/api/iphone/').then(async response => {
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  while (true) {
+    const {done, value} = await reader.read();
+    if (done) {
+      break;
+    }
+    chunks.push(value);
+    size += value.length;
+    elements.progress.textContent = humanFileSize(size);
+  }
+  const buffer = new Uint8Array(size);
+  let position = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, position);
+    position += chunk.length;
+  }
 
-req.open('GET', 'http://www.vpngate.net/api/iphone/');
-//req.open('GET', chrome.runtime.getURL('data/assets/iphone.txt'));
-req.onload = () => {
+  const content = await (new TextDecoder('utf-8')).decode(buffer);
+
+  return {
+    content,
+    headers: response.headers
+  };
+}).then(response => {
+  // cache response for 5 minutes
+  if (response.content.length > 3000 && response.headers.has('sw-fetched-on') === false) {
+    try {
+      caches.open('storage').then(cache => {
+        cache.put('http://www.vpngate.net/api/iphone/', new Response([response.content], {
+          headers: {
+            'sw-fetched-on': Date.now()
+          }
+        }));
+      }).catch(e => console.warn('cannot save response', e));
+    }
+    catch (e) {}
+  }
+
   elements.loader.parentNode.removeChild(elements.loader);
-  let [comment, headers, ...body] = req.responseText.split(/\n/);
+  const [comment, headers, ...body] = response.content.split(/\n/);
   body.forEach(row => {
-    //[HostName, IP, Score, Ping, Speed, CountryLong, CountryShort, NumVpnSessions, Uptime, TotalUsers, TotalTraffic, LogType, Operator, Message, OpenVPN_ConfigData_Base64]
+    // [HostName, IP, Score, Ping, Speed, CountryLong, CountryShort, NumVpnSessions,
+    //  Uptime, TotalUsers, TotalTraffic, LogType, Operator, Message, OpenVPN_ConfigData_Base64]
     row = row.split(',');
     if (row.length === 15) {
-      let node = table.row.add([
+      const node = table.row.add([
         '',
         row[5],
         row[1],
@@ -54,7 +91,7 @@ req.onload = () => {
       ]).node();
       node.querySelector('td').style['background-image'] = 'url(flags/' + row[6] + '.png)';
       node.querySelector('td').title = row[5];
-      let input = document.createElement('input');
+      const input = document.createElement('input');
       input.type = 'button';
       input.value = 'download';
       input.dataset.value = row[14];
@@ -64,22 +101,35 @@ req.onload = () => {
     }
   });
   table.draw();
-};
-req.onprogress = (e) => {
-  elements.progress.textContent = e.loaded;
-};
-req.onerror = () => {
+}).catch(e => {
+  console.warn(e);
   elements.loader.dataset.error = true;
   elements.loader.textContent = 'Cannot connect to vpngate.net. Please check your network and reopen this panel.';
-};
-window.addEventListener('load', () => req.send());
+});
 
 document.addEventListener('click', e => {
-  let target = e.target;
+  const target = e.target;
   if (target.dataset.cmd === 'download') {
-    chrome.downloads.download({
-      url: 'data:application/zip;base64,' + target.dataset.value,
-      filename: target.dataset.filename
-    });
+    const a = document.createElement('a');
+    a.href = 'data:application/x-openvpn-profile;base64,' + target.dataset.value;
+    a.download = target.dataset.filename;
+    a.click();
   }
 });
+
+// what is my ip
+{
+  const input = document.createElement('input');
+  input.type = 'button';
+  input.value = 'Find my IP';
+  input.onclick = () => chrome.tabs.create({
+    url: 'https://webbrowsertools.com/ip-address/'
+  });
+  document.getElementById('table_filter').appendChild(input);
+}
+
+// service worker
+try {
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('service worker error', e));
+}
+catch (e) {}

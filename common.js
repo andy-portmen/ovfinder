@@ -1,16 +1,37 @@
 'use strict';
 
-chrome.storage.local.get('version', prefs => {
-  let version = chrome.runtime.getManifest().version;
-  let firefox = navigator.userAgent.indexOf('Firefox') !== -1;
-  if (firefox ? !prefs.version : (prefs.version !== version)) {
-    window.setTimeout(() => {
-      chrome.storage.local.set({version}, () => {
-        chrome.tabs.create({
-          url: 'http://add0n.com/ovfinder.html?version=' + version +
-            '&type=' + (prefs.version ? ('upgrade&p=' + prefs.version) : 'install')
-        });
-      });
-    }, 3000);
+chrome.runtime.onMessage.addListener(request => {
+  if (request.method === 'download') {
+    const a = document.createElement('a');
+    a.href = request.href;
+    a.download = request.filename;
+    a.click();
   }
 });
+
+/* FAQs & Feedback */
+{
+  const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
+  if (navigator.webdriver !== true) {
+    const page = getManifest().homepage_url;
+    const {name, version} = getManifest();
+    onInstalled.addListener(({reason, previousVersion}) => {
+      management.getSelf(({installType}) => installType === 'normal' && storage.local.get({
+        'faqs': true,
+        'last-update': 0
+      }, prefs => {
+        if (reason === 'install' || (prefs.faqs && reason === 'update')) {
+          const doUpdate = (Date.now() - prefs['last-update']) / 1000 / 60 / 60 / 24 > 45;
+          if (doUpdate && previousVersion !== version) {
+            tabs.create({
+              url: page + '?version=' + version + (previousVersion ? '&p=' + previousVersion : '') + '&type=' + reason,
+              active: reason === 'install'
+            });
+            storage.local.set({'last-update': Date.now()});
+          }
+        }
+      }));
+    });
+    setUninstallURL(page + '?rd=feedback&name=' + encodeURIComponent(name) + '&version=' + version);
+  }
+}
