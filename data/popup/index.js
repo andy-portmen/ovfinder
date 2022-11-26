@@ -1,5 +1,7 @@
-/* globals $ */
+/* global $ */
 'use strict';
+
+const SERVER = 'https://www.vpngate.net/api/iphone/';
 
 const elements = {
   loader: document.querySelector('#loader'),
@@ -17,6 +19,7 @@ function humanFileSize(size) {
   return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
+// eslint-disable-next-line new-cap
 const table = $('#table').DataTable({
   'pageLength': 7,
   'lengthChange': false,
@@ -32,11 +35,12 @@ const table = $('#table').DataTable({
   'order': [[3, 'desc']]
 });
 
-fetch('https://www.vpngate.net/api/iphone/').then(async response => {
+fetch(SERVER).then(async response => {
   const reader = response.body.getReader();
+
   const chunks = [];
   let size = 0;
-  while (true) {
+  for (;;) {
     const {done, value} = await reader.read();
     if (done) {
       break;
@@ -63,7 +67,7 @@ fetch('https://www.vpngate.net/api/iphone/').then(async response => {
   if (response.content.length > 3000 && response.headers.has('sw-fetched-on') === false) {
     try {
       caches.open('storage').then(cache => {
-        cache.put('https://www.vpngate.net/api/iphone/', new Response([response.content], {
+        cache.put(SERVER, new Response([response.content], {
           headers: {
             'sw-fetched-on': Date.now()
           }
