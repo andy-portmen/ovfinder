@@ -1,44 +1,51 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="datatables/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="index.css">
-  </head>
-  <body>
-    <div id="loader" data-error=false>
-      <span>Loading</span>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="datatables/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div id="permission" class="hidden">
+    <span>Cannot access "vpngate.net" directly. Would you like to use "<span id="hostname"></span>" mirror?</span>
+    <div>
+      <input id="no" type="button" value="No">
+      <input id="yes" type="button" value="Yes">
     </div>
-    <div id="body">
-      <table id="table" class="display">
-        <colgroup>
-          <col width="40">
-          <col style="display: none;">
-          <col>
-          <col width="90">
-          <col width="90">
-          <col width="120">
-          <col width="100">
-        </colgroup>
-        <thead>
-          <tr>
-            <th>F</th>
-            <th>Country</th>
-            <th>IP</th>
-            <th>Score</th>
-            <th>Speed</th>
-            <th>Total Users</th>
-            <th>Download</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-    </div>
+  </div>
+  <div id="loader" data-error=false>
+    <span>Loading</span>
+  </div>
+  <div id="body">
+    <table id="table" class="display">
+      <colgroup>
+        <col width="40">
+        <col style="display: none;">
+        <col>
+        <col width="90">
+        <col width="90">
+        <col width="120">
+        <col width="100">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>F</th>
+          <th>Country</th>
+          <th>IP</th>
+          <th>Score</th>
+          <th>Speed</th>
+          <th>Total Users</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
 
-    <script type="text/javascript" charset="utf8" src="jquery/jquery-3.1.1.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="datatables/jquery.dataTables.min.js"></script>
-    <script src="index.js"></script>
-  </body>
+  <script type="text/javascript" charset="utf8" src="jquery/jquery-3.1.1.min.js"></script>
+  <script type="text/javascript" charset="utf8" src="datatables/jquery.dataTables.min.js"></script>
+  <script src="index.js"></script>
+</body>
 </html>

@@ -6,24 +6,32 @@ body {
   margin: 0;
 }
 
-#loader {
+#loader,
+#permission {
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0 0 0 0;
   display: flex;
+  gap: 10px;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.8);
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 100;
+}
+#loader {
   background-position: center;
   background-repeat: no-repeat;
-  color: #fff;
-  z-index: 100;
 }
 #loader[data-error=false] {
   background-image: url('ring.svg');
 }
+#permission {
+  flex-direction: column;
+}
+#permission:not(.hidden) + #loader {
+  display: none;
+}
+
 #body {
   overflow: auto;
   margin: 10px;
@@ -79,4 +87,8 @@ th:last-child,
 td:last-child {
   text-align: right;
   padding-right: 0 !important;
+}
+
+.hidden {
+  display: none !important;
 }
