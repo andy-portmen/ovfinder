@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, JSZip */
 'use strict';
 
 const SERVER = 'https://www.vpngate.net/api/iphone/';
@@ -28,6 +28,7 @@ const table = $('#table').DataTable({
   'pageLength': 7,
   'lengthChange': false,
   'columns': [
+    {orderable: false},
     {orderable: false},
     {visible: false},
     null,
@@ -89,23 +90,18 @@ const start = async href => {
     row = row.split(',');
     if (row.length === 15) {
       const node = table.row.add([
+        '<input type="checkbox" name="radioGroup">',
         '',
         row[5],
         row[1],
         row[2],
         humanFileSize(row[4]),
         row[9],
-        ''
+        `<input type=button value="Download" data-value="${row[14]}" data-cmd="download" data-filename="${row[6] + '-' + row[1] + '.ovpn'}">`
       ]).node();
-      node.querySelector('td').style['background-image'] = 'url(flags/' + row[6] + '.png)';
-      node.querySelector('td').title = row[5];
-      const input = document.createElement('input');
-      input.type = 'button';
-      input.value = 'download';
-      input.dataset.value = row[14];
-      input.dataset.cmd = 'download';
-      input.dataset.filename = row[6] + '-' + row[1] + '.ovpn';
-      node.querySelector('td:last-child').appendChild(input);
+      const flag = node.querySelector('td:nth-child(2)');
+      flag.style['background-image'] = 'url(flags/' + row[6] + '.png)';
+      flag.title = row[5];
     }
   });
   table.draw();
@@ -172,6 +168,74 @@ document.addEventListener('click', e => {
   }
 });
 
+// select
+{
+  const input = document.createElement('input');
+  input.type = 'button';
+  input.value = 'Select View';
+  input.onclick = () => {
+    [...document.querySelectorAll('[name=radioGroup]')].forEach(e => {
+      e.checked = true;
+      e.dispatchEvent(new Event('change', {
+        bubbles: true
+      }));
+    });
+  };
+  document.getElementById('table_filter').appendChild(input);
+}
+{
+  const input = document.createElement('input');
+  input.type = 'button';
+  input.value = 'Select None';
+  input.onclick = () => {
+    [...document.querySelectorAll('[name=radioGroup]')].forEach(e => {
+      e.checked = false;
+      e.dispatchEvent(new Event('change', {
+        bubbles: true
+      }));
+    });
+  };
+  document.getElementById('table_filter').appendChild(input);
+}
+// download
+{
+  const input = document.createElement('input');
+  input.type = 'button';
+  input.value = 'Download';
+  input.disabled = true;
+  input.onclick = () => {
+    const zip = new JSZip();
+    for (const [filename, value] of c.entries()) {
+      zip.file(filename, atob(value));
+    }
+    zip.generateAsync({
+      type: 'base64'
+    }).then(content => {
+      const a = document.createElement('a');
+      a.href = 'data:application/x-openvpn-profile;base64,' + content;
+      a.download = 'profiles.zip';
+      a.click();
+    });
+  };
+  document.getElementById('table_filter').appendChild(input);
+
+  const c = new Map();
+  document.addEventListener('change', e => {
+    if (e.target.name === 'radioGroup') {
+      const d = e.target.closest('tr').querySelector('input[type=button]');
+      if (d) {
+        const {filename, value} = d.dataset;
+        if (e.target.checked) {
+          c.set(filename, value);
+        }
+        else {
+          c.delete(filename);
+        }
+        input.disabled = c.size === 0;
+      }
+    }
+  });
+}
 // what is my ip
 {
   const input = document.createElement('input');
@@ -182,7 +246,6 @@ document.addEventListener('click', e => {
   });
   document.getElementById('table_filter').appendChild(input);
 }
-
 // service worker
 try {
   navigator.serviceWorker.register('sw.js').catch(e => console.warn('service worker error', e));

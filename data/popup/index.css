@@ -5,6 +5,18 @@ body {
   min-height: 300px;
   margin: 0;
 }
+input[type=button] {
+  color: #333 !important;
+  border: 1px solid #979797;
+  background: linear-gradient(to bottom, #fff 0%, #dcdcdc 100%);
+  background-color: white;
+  height: 28px;
+  cursor: pointer;
+  outline: none;
+}
+input[type=button]:disabled {
+  opacity: 0.2;
+}
 
 #loader,
 #permission {
@@ -56,15 +68,6 @@ body {
   border: solid 1px #d8d8d8;
   padding: 5px;
 }
-input[type=button] {
-  color: #333 !important;
-  border: 1px solid #979797;
-  background: linear-gradient(to bottom, #fff 0%, #dcdcdc 100%);
-  background-color: white;
-  height: 28px;
-  cursor: pointer;
-  outline: none;
-}
 #table input[type=button]:active {
   opacity: 0.5;
 }
@@ -76,7 +79,7 @@ td {
   text-align: center;
   padding: 2px 5px !important;
 }
-td:first-child {
+td:nth-child(2) {
   height: 32px;
   background-position: center;
   background-size: 32px;
