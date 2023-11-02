@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">OVFinder</string>
+    <string name="lookup_button">FIND</string>
+    <string name="config_ready">New configuration is saved in the file</string>
+    <string name="get_vpn_configs">get vpns</string>
+    <string name="ip">IP</string>
+    <string name="speed">speed</string>
+    <string name="ping">ping</string>
+    <string name="country_code">CO</string>
+    <string name="uptime">uptime</string>
+</resources>
